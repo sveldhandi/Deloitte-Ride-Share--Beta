@@ -492,13 +492,20 @@
           <div class="type-opt" onclick="selectType(this)">🏍️ Bike (1 pillion only)</div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Pickup Area / Locality</label>
-        <input type="text" placeholder="e.g. Koramangala Block 4">
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label>Ride Direction</label>
+        <div class="ride-type-toggle">
+          <div class="type-opt sel" id="dirToOffice" onclick="selectDirection('to')">🏢 Home → Office</div>
+          <div class="type-opt" id="dirFromOffice" onclick="selectDirection('from')">🏠 Office → Home</div>
+        </div>
       </div>
       <div class="form-group">
-        <label>Office Destination</label>
-        <select>
+        <label id="localityLabel">Your Pickup Locality</label>
+        <input type="text" id="localityInput" placeholder="e.g. Banjara Hills, Road No. 12">
+      </div>
+      <div class="form-group">
+        <label id="officeLabel">Office Location</label>
+        <select id="officeSelect">
           <option selected>Deloitte – Hyderabad Gachibowli</option>
           <option>Deloitte USI – Hebbal, Bengaluru</option>
           <option>Deloitte USI – Prestige Trade Tower</option>
@@ -508,7 +515,7 @@
       </div>
       <div class="form-group">
         <label>Departure Time</label>
-        <input type="time" value="08:15">
+        <input type="time" value="08:15" id="deptTime">
       </div>
       <div class="form-group">
         <label>Ride Date</label>
@@ -526,6 +533,14 @@
           <option>3 seats</option>
           <option>4 seats</option>
         </select>
+      </div>
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label>Route Preview</label>
+        <div id="routePreview" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:0.85rem; font-size:13px; color:rgba(255,255,255,0.75); line-height:2;">
+          <span id="previewFrom" style="color:#86EB22; font-weight:600;">📍 Banjara Hills, Road No. 12</span>
+          <span style="color:rgba(255,255,255,0.3); margin: 0 8px;">→</span>
+          <span id="previewTo" style="color:rgba(255,255,255,0.85); font-weight:600;">🏢 Deloitte – Hyderabad Gachibowli</span>
+        </div>
       </div>
     </div>
     <button class="form-submit" onclick="postRide(this)">Post My Ride →</button>
@@ -891,7 +906,49 @@ function postRide(btn) {
   }, 4000);
 }
 
-function selectType(el) {
+function selectDirection(dir) {
+  const toBtn = document.getElementById('dirToOffice');
+  const fromBtn = document.getElementById('dirFromOffice');
+  const localityLabel = document.getElementById('localityLabel');
+  const officeLabel = document.getElementById('officeLabel');
+  const timeInput = document.getElementById('deptTime');
+  if (dir === 'to') {
+    toBtn.classList.add('sel'); fromBtn.classList.remove('sel');
+    localityLabel.textContent = 'Your Pickup Locality';
+    officeLabel.textContent = 'Office Destination';
+    timeInput.value = '08:15';
+  } else {
+    fromBtn.classList.add('sel'); toBtn.classList.remove('sel');
+    localityLabel.textContent = 'Your Drop-off Locality';
+    officeLabel.textContent = 'Office Starting Point';
+    timeInput.value = '18:30';
+  }
+  updateRoutePreview();
+}
+
+function updateRoutePreview() {
+  const dir = document.getElementById('dirFromOffice').classList.contains('sel') ? 'from' : 'to';
+  const locality = document.getElementById('localityInput').value.trim() || 'Your locality';
+  const office = document.getElementById('officeSelect').value;
+  const fromEl = document.getElementById('previewFrom');
+  const toEl = document.getElementById('previewTo');
+  if (dir === 'to') {
+    fromEl.textContent = '📍 ' + locality;
+    toEl.textContent = '🏢 ' + office;
+  } else {
+    fromEl.textContent = '🏢 ' + office;
+    toEl.textContent = '📍 ' + locality;
+  }
+}
+
+// Wire live preview updates
+document.addEventListener('DOMContentLoaded', function() {
+  const localityInput = document.getElementById('localityInput');
+  const officeSelect = document.getElementById('officeSelect');
+  if (localityInput) localityInput.addEventListener('input', updateRoutePreview);
+  if (officeSelect) officeSelect.addEventListener('change', updateRoutePreview);
+  updateRoutePreview();
+});
   document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
   const seatsSelect = document.getElementById('seatsSelect');
